@@ -1,0 +1,28 @@
+FROM continuumio/miniconda3:latest
+
+WORKDIR /app
+
+# Install RDKit and dependencies via conda
+RUN conda install -y -c conda-forge \
+    rdkit \
+    python=3.10 \
+    numpy \
+    scipy \
+    networkx \
+    matplotlib \
+    pillow \
+    flask \
+    gunicorn \
+    && conda clean -afy
+
+# Copy application code
+COPY . .
+
+# Install the package
+RUN pip install -e .
+
+# Expose port
+EXPOSE 8080
+
+# Run with gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "compound_evolution.web.app:app"]
