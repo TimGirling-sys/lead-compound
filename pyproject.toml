@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compound-evolution"
+version = "1.0.0"
+description = "Analyze chemical compound evolution in patents to identify lead compounds and optimization pathways"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Compound Evolution Team"}
+]
+keywords = [
+    "cheminformatics",
+    "drug-discovery",
+    "lead-optimization",
+    "SAR",
+    "patents",
+    "molecular-similarity",
+    "clustering"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "rdkit>=2022.03.1",
+    "numpy>=1.21.0",
+    "scipy>=1.7.0",
+    "networkx>=2.6.0",
+    "matplotlib>=3.5.0",
+    "pillow>=9.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "flake8>=6.0.0",
+]
+docs = [
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+]
+
+[project.scripts]
+compound-evolution = "compound_evolution.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/example/compound-evolution"
+Documentation = "https://compound-evolution.readthedocs.io"
+Repository = "https://github.com/example/compound-evolution"
+Issues = "https://github.com/example/compound-evolution/issues"
+
+[tool.setuptools.packages.find]
+include = ["compound_evolution*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
