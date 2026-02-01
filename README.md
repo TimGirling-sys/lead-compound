@@ -83,6 +83,25 @@ compound-evolution analyze compounds.sdf -o output/ \
     --name my_analysis
 ```
 
+### Web Interface
+
+The easiest way to use the tool is through the web interface:
+
+```bash
+# Start the web server
+compound-evolution web
+
+# Or specify host and port
+compound-evolution web --host 0.0.0.0 --port 8080
+```
+
+Then open your browser to `http://localhost:5000`. The web interface allows you to:
+1. Upload SDF files via drag-and-drop or file browser
+2. Adjust analysis parameters (similarity threshold, clustering method)
+3. View interactive network and linear pathway visualizations
+4. Explore pathway details and cluster information
+5. Download results (PNG, HTML report, JSON data)
+
 ### Python API
 
 ```python

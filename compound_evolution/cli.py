@@ -36,6 +36,9 @@ Examples:
   # Use different clustering method
   compound-evolution analyze compounds.sdf -o output/ --clustering network
 
+  # Start web interface
+  compound-evolution web --port 5000
+
   # Generate only network visualization
   compound-evolution visualize results/evolution_analysis_data.json \\
       -o pathway.png --style network
@@ -138,6 +141,29 @@ Examples:
         help='Figure size as width,height (default: 16,12)'
     )
 
+    # Web server command
+    web_parser = subparsers.add_parser(
+        'web',
+        help='Start the web interface'
+    )
+    web_parser.add_argument(
+        '--host',
+        type=str,
+        default='127.0.0.1',
+        help='Host address to bind to (default: 127.0.0.1)'
+    )
+    web_parser.add_argument(
+        '--port',
+        type=int,
+        default=5000,
+        help='Port number (default: 5000)'
+    )
+    web_parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug mode'
+    )
+
     return parser
 
 
@@ -208,6 +234,21 @@ def cmd_visualize(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    """Execute the web server command."""
+    try:
+        from .web import run_server
+        run_server(host=args.host, port=args.port, debug=args.debug)
+        return 0
+    except ImportError as e:
+        print(f"Error: Could not start web server. Missing dependency: {e}")
+        print("Install Flask with: pip install flask")
+        return 1
+    except Exception as e:
+        print(f"Error starting web server: {e}")
+        return 1
+
+
 def main() -> int:
     """Main entry point for the CLI."""
     parser = create_parser()
@@ -221,6 +262,8 @@ def main() -> int:
         return cmd_analyze(args)
     elif args.command == 'visualize':
         return cmd_visualize(args)
+    elif args.command == 'web':
+        return cmd_web(args)
     else:
         parser.print_help()
         return 1
