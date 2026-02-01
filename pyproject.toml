@@ -74,6 +74,9 @@ Issues = "https://github.com/example/compound-evolution/issues"
 [tool.setuptools.packages.find]
 include = ["compound_evolution*"]
 
+[tool.setuptools.package-data]
+"compound_evolution.web" = ["templates/*.html", "static/css/*.css", "static/js/*.js"]
+
 [tool.black]
 line-length = 88
 target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
