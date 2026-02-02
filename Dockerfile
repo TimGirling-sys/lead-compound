@@ -21,12 +21,6 @@ COPY . .
 # Add app to Python path (instead of pip install)
 ENV PYTHONPATH=/app
 
-# Debug: List files to verify they exist
-RUN echo "=== Checking template files ===" && \
-    ls -la /app/compound_evolution/web/ && \
-    ls -la /app/compound_evolution/web/templates/ && \
-    ls -la /app/compound_evolution/web/static/
-
 # Expose port
 EXPOSE 8080
 
