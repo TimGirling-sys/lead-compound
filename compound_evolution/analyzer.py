@@ -177,6 +177,51 @@ class CompoundEvolutionAnalyzer:
 
         return self._analyze_compounds(compounds)
 
+    def analyze_excel(self, excel_path: str) -> AnalysisResult:
+        """
+        Analyze compounds from an Excel file.
+
+        The Excel file should contain a column with SMILES strings.
+        Supported column headers: 'smiles', 'smi', 'canonical_smiles', 'structure'
+
+        Args:
+            excel_path: Path to the Excel file (.xlsx or .xls)
+
+        Returns:
+            AnalysisResult with all analysis data
+
+        Raises:
+            FileNotFoundError: If Excel file doesn't exist
+            ValueError: If no SMILES column found or no valid compounds
+        """
+        print(f"Parsing compounds from {excel_path}...")
+        compounds = self.fp_calculator.parse_excel(excel_path)
+        print(f"  Found {len(compounds)} valid compounds")
+
+        return self._analyze_compounds(compounds)
+
+    def analyze_file(self, file_path: str) -> AnalysisResult:
+        """
+        Analyze compounds from either an SDF or Excel file.
+
+        Automatically detects file type based on extension.
+
+        Args:
+            file_path: Path to the file (SDF or Excel)
+
+        Returns:
+            AnalysisResult with all analysis data
+        """
+        file_lower = file_path.lower()
+        if file_lower.endswith('.sdf'):
+            return self.analyze_sdf(file_path)
+        elif file_lower.endswith(('.xlsx', '.xls')):
+            return self.analyze_excel(file_path)
+        else:
+            raise ValueError(
+                f"Unsupported file type. Expected .sdf, .xlsx, or .xls"
+            )
+
     def analyze_smiles(self,
                       smiles_list: List[str],
                       names: Optional[List[str]] = None) -> AnalysisResult:

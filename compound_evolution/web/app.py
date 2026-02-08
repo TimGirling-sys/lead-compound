@@ -224,7 +224,7 @@ INDEX_HTML = '''<!DOCTYPE html>
         </header>
 
         <section id="upload-section" class="card">
-            <h2>Upload SDF File</h2>
+            <h2>Upload Compound File</h2>
             <form id="upload-form" enctype="multipart/form-data">
                 <div class="upload-area" id="drop-zone">
                     <div class="upload-icon">
@@ -234,10 +234,10 @@ INDEX_HTML = '''<!DOCTYPE html>
                             <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
                     </div>
-                    <p class="upload-text">Drag and drop your SDF file here</p>
-                    <p class="upload-subtext">or</p>
+                    <p class="upload-text">Drag and drop your file here</p>
+                    <p class="upload-subtext">Supported: SDF, Excel (.xlsx, .xls)</p>
                     <label for="file-input" class="btn btn-primary">Choose File</label>
-                    <input type="file" id="file-input" name="file" accept=".sdf" hidden>
+                    <input type="file" id="file-input" name="file" accept=".sdf,.xlsx,.xls" hidden>
                     <p id="file-name" class="file-name"></p>
                 </div>
 
@@ -372,7 +372,12 @@ INDEX_HTML = '''<!DOCTYPE html>
         function handleFileSelect(files) {
             if (files.length > 0) {
                 const file = files[0];
-                if (!file.name.toLowerCase().endsWith('.sdf')) { alert('Please select an SDF file.'); return; }
+                const name = file.name.toLowerCase();
+                const validExts = ['.sdf', '.xlsx', '.xls'];
+                if (!validExts.some(ext => name.endsWith(ext))) {
+                    alert('Please select an SDF or Excel file (.sdf, .xlsx, .xls)');
+                    return;
+                }
                 selectedFile = file;
                 fileName.textContent = file.name;
                 analyzeBtn.disabled = false;
@@ -507,7 +512,7 @@ def create_app(config: Optional[dict] = None) -> Flask:
         SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-key-change-in-production'),
         MAX_CONTENT_LENGTH=50 * 1024 * 1024,
         UPLOAD_FOLDER=tempfile.mkdtemp(prefix='compound_evolution_'),
-        ALLOWED_EXTENSIONS={'sdf'},
+        ALLOWED_EXTENSIONS={'sdf', 'xlsx', 'xls'},
     )
 
     if config:
@@ -536,7 +541,7 @@ def register_routes(app: Flask) -> None:
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         if not allowed_file(file.filename, app.config['ALLOWED_EXTENSIONS']):
-            return jsonify({'error': 'Invalid file type. Please upload an SDF file.'}), 400
+            return jsonify({'error': 'Invalid file type. Please upload an SDF or Excel file (.sdf, .xlsx, .xls).'}), 400
 
         analysis_id = str(uuid.uuid4())
         analysis_dir = os.path.join(app.config['UPLOAD_FOLDER'], analysis_id)
@@ -557,7 +562,7 @@ def register_routes(app: Flask) -> None:
                 similarity_threshold=similarity_threshold,
                 clustering_method=clustering_method
             )
-            result = analyzer.analyze_sdf(sdf_path)
+            result = analyzer.analyze_file(sdf_path)
 
             network_path = os.path.join(analysis_dir, 'network.png')
             linear_path = os.path.join(analysis_dir, 'linear.png')

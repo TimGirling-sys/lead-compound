@@ -13,6 +13,7 @@ RUN conda install -y -c conda-forge \
     pillow \
     flask \
     gunicorn \
+    openpyxl \
     && conda clean -afy
 
 # Copy application code

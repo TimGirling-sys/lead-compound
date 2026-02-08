@@ -249,3 +249,97 @@ class FingerprintCalculator:
                     similar.append((compound, sim))
 
         return sorted(similar, key=lambda x: x[1], reverse=True)
+
+    def parse_excel(self, excel_path: str) -> List[Compound]:
+        """
+        Parse an Excel file containing compound data.
+
+        The Excel file should have columns for SMILES and optionally names.
+        Supported column headers (case-insensitive):
+        - SMILES: 'smiles', 'smi', 'canonical_smiles', 'structure'
+        - Names: 'name', 'compound_name', 'id', 'compound_id', 'mol_name'
+
+        Args:
+            excel_path: Path to the Excel file (.xlsx or .xls)
+
+        Returns:
+            List of Compound objects with fingerprints calculated
+
+        Raises:
+            FileNotFoundError: If Excel file doesn't exist
+            ValueError: If no SMILES column found or no valid compounds
+        """
+        from openpyxl import load_workbook
+
+        wb = load_workbook(excel_path, read_only=True, data_only=True)
+        sheet = wb.active
+
+        # Get headers from first row
+        headers = []
+        for cell in next(sheet.iter_rows(min_row=1, max_row=1)):
+            headers.append(str(cell.value).lower().strip() if cell.value else '')
+
+        # Find SMILES column
+        smiles_headers = ['smiles', 'smi', 'canonical_smiles', 'structure', 'mol']
+        smiles_col = None
+        for i, header in enumerate(headers):
+            if header in smiles_headers:
+                smiles_col = i
+                break
+
+        if smiles_col is None:
+            raise ValueError(
+                f"No SMILES column found. Expected one of: {smiles_headers}. "
+                f"Found columns: {headers}"
+            )
+
+        # Find name column (optional)
+        name_headers = ['name', 'compound_name', 'id', 'compound_id', 'mol_name', 'title']
+        name_col = None
+        for i, header in enumerate(headers):
+            if header in name_headers:
+                name_col = i
+                break
+
+        # Parse compounds from rows
+        compounds = []
+        for idx, row in enumerate(sheet.iter_rows(min_row=2)):
+            cells = list(row)
+            if smiles_col >= len(cells):
+                continue
+
+            smiles_value = cells[smiles_col].value
+            if not smiles_value or not isinstance(smiles_value, str):
+                continue
+
+            smiles = smiles_value.strip()
+            if not smiles:
+                continue
+
+            # Get name if available
+            name = None
+            if name_col is not None and name_col < len(cells):
+                name_value = cells[name_col].value
+                if name_value:
+                    name = str(name_value).strip()
+
+            if not name:
+                name = f"Compound_{idx}"
+
+            # Parse SMILES to molecule
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                print(f"Warning: Invalid SMILES at row {idx + 2}: {smiles[:50]}...")
+                continue
+
+            compound = self._mol_to_compound(mol, idx)
+            if compound is not None:
+                compound.name = name
+                compounds.append(compound)
+
+        wb.close()
+
+        if not compounds:
+            raise ValueError(f"No valid compounds found in {excel_path}")
+
+        return compounds
