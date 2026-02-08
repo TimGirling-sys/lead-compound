@@ -279,11 +279,16 @@ INDEX_HTML = '''<!DOCTYPE html>
 
         <section id="results-section" class="card" hidden>
             <h2>Analysis Results</h2>
+            <div id="file-info" style="background: var(--background); padding: 15px; border-radius: var(--radius-small); margin-bottom: 20px;">
+                <p style="margin: 0; font-weight: 600;">Analyzed file: <span id="result-filename" style="color: var(--primary-color);"></span></p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-light);">Sample compounds: <span id="sample-compounds"></span></p>
+            </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="stat-value" id="stat-compounds">-</div><div class="stat-label">Total Compounds</div></div>
                 <div class="stat-card"><div class="stat-value" id="stat-clusters">-</div><div class="stat-label">Clusters</div></div>
                 <div class="stat-card"><div class="stat-value" id="stat-leads">-</div><div class="stat-label">Lead Compounds</div></div>
                 <div class="stat-card"><div class="stat-value" id="stat-similarity">-</div><div class="stat-label">Avg Similarity</div></div>
+                <div class="stat-card"><div class="stat-value" id="stat-molweight">-</div><div class="stat-label">Avg Mol Weight</div></div>
             </div>
             <div class="tabs">
                 <button class="tab active" data-tab="network">Network View</button>
@@ -418,10 +423,13 @@ INDEX_HTML = '''<!DOCTYPE html>
         }
 
         function displayResults(data) {
+            document.getElementById('result-filename').textContent = data.filename || 'Unknown';
+            document.getElementById('sample-compounds').textContent = (data.summary.sample_compounds || []).join(', ') || 'N/A';
             document.getElementById('stat-compounds').textContent = data.summary.total_compounds;
             document.getElementById('stat-clusters').textContent = data.summary.total_clusters;
             document.getElementById('stat-leads').textContent = data.summary.total_leads;
             document.getElementById('stat-similarity').textContent = data.summary.avg_similarity;
+            document.getElementById('stat-molweight').textContent = data.summary.avg_mol_weight || '-';
             document.getElementById('network-image').src = '/image/' + data.analysis_id + '/network?' + Date.now();
             document.getElementById('linear-image').src = '/image/' + data.analysis_id + '/linear?' + Date.now();
             updatePathway(data.pathway);
@@ -562,14 +570,20 @@ def register_routes(app: Flask) -> None:
             json_path = os.path.join(analysis_dir, 'data.json')
             result.save_json(json_path)
 
+            # Get sample compound names to prove file was analyzed
+            sample_compounds = [c.name for c in result.compounds[:5]]
+
             return jsonify({
                 'success': True,
                 'analysis_id': analysis_id,
+                'filename': filename,
                 'summary': {
                     'total_compounds': len(result.compounds),
                     'total_clusters': len(result.clusters),
                     'total_leads': len(result.pathway.all_leads),
                     'avg_similarity': round(result.summary['avg_pairwise_similarity'], 3),
+                    'avg_mol_weight': round(result.summary.get('avg_mol_weight', 0), 1),
+                    'sample_compounds': sample_compounds,
                 },
                 'pathway': {
                     'initial_leads': [{'name': l.compound.name, 'smiles': l.compound.smiles, 'analog_count': l.analog_count, 'generation': l.generation} for l in result.pathway.initial_leads],
